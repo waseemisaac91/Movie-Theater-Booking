@@ -36,13 +36,44 @@ def add_movie(movies_db, title, genres, showtimes):
     - genres: should be converted to/stored as a set() to prevent duplicate genres.
     - showtimes: list of dicts, e.g., [{"time": "19:30", "price": 10.0, "seats": 50, "sold": 0}]
     """
-    pass
+    formatted_showtimes = []
+    
+    for showtime_data in showtimes:
+        new_showtime = add_showtime(
+            showtime_data["time"],
+            showtime_data["price"],
+            showtime_data["seats"]
+        )
+
+        if new_showtime is not None:
+            formatted_showtimes.append(new_showtime)
+
+    movie_information = {
+        "title": title,
+        "genres": set(genres),
+        "showtimes": formatted_showtimes
+    }
+
+    MOVIES_DB[title] = movie_information
+
+    return movie_information
 
 def add_showtime(start_time, ticket_price, auditorium_capacity):
     """
     Feature 1 Helper: Creates and returns a single showtime dictionary/tuple.
     """
-    pass
+    if ticket_price <= 0:
+        return None
+
+    if auditorium_capacity <= 0 or auditorium_capacity > 100:
+        return None
+
+    showtime= {
+        "time": start_time,
+        "price": ticket_price,
+        "seats": auditorium_capacity
+    }
+    return showtime
 
 def search_by_genre(movies_db, genre_name):
     """
@@ -50,14 +81,21 @@ def search_by_genre(movies_db, genre_name):
     - Must use filter() or lambda.
     - Must gracefully return an empty list/message if genre doesn't exist.
     """
-    pass
+    genre_name= genre_name.lower()
+    result= list(filter(lambda movie: genre_name in movie["genres"], 
+                        MOVIES_DB.values()))
+    return result
 
 def search_by_max_price(movies_db, max_price):
     """
     Feature 2: Returns showtimes/movies priced at or below max_price.
     - Must use filter() and lambda.
     """
-    pass
+    max_price= float(max_price)
+    result_price= list(filter(lambda movie: any(showtime["price"] <= max_price
+                                                for showtime in movie["showtimes"]),
+                                                MOVIES_DB.values()))
+    return result_price
 
 
 # ==========================================
@@ -143,7 +181,33 @@ def get_popularity_report(movies_db):
 def main():
     print("=== Downtown Cinema Management System ===")
     # Interactive menu loop goes here
-    pass
+    
+    # add movie and showtime
+    for i in range(3):
+        new_showtime =add_showtime(
+            input("Enter the start time: "),
+            float(input("Enter the ticket price: ")),
+            int(input("Enter the number of seats: ")))
+        if new_showtime is not None:
+            added_movie = add_movie(
+                MOVIES_DB,
+                input("Enter the movie title: "),
+                input("Enter genres separated by commas: ").split(","),
+                [new_showtime])
+    
 
-if _name_ == "_main_":
+        print(added_movie)
+    print(MOVIES_DB)
+
+    # search genre
+    genre_name = input("Enter the genre you want to search for: ")
+    result = search_by_genre(MOVIES_DB, genre_name)
+    print(result)
+
+    # search max price
+    max_price = input("Enter the max price you want to search for: ")
+    result_price = search_by_max_price(MOVIES_DB, max_price)
+    print(result_price)
+
+if __name__ == "__main__":
     main()
