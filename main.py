@@ -196,7 +196,7 @@ def main():
                 [new_showtime])
     
 
-        print(added_movie)
+            print(added_movie)
     print(MOVIES_DB)
 
     # search genre
