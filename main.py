@@ -188,11 +188,12 @@ def main():
             input("Enter the start time: "),
             float(input("Enter the ticket price: ")),
             int(input("Enter the number of seats: ")))
-        added_movie = add_movie(
-            MOVIES_DB,
-            input("Enter the movie title: "),
-            input("Enter genres separated by commas: ").split(","),
-            [new_showtime])
+        if new_showtime is not None:
+            added_movie = add_movie(
+                MOVIES_DB,
+                input("Enter the movie title: "),
+                input("Enter genres separated by commas: ").split(","),
+                [new_showtime])
     
 
         print(added_movie)
