@@ -87,7 +87,7 @@ def add_snack_to_order(order, snack_menu, snack_name, quantity):
 
 
 # ==========================================
-# TEAM LEADER: FEATURES 5, 6, 7 (Checkout & Reports)
+# Waseem: FEATURES 5, 6, 7 (Checkout & Reports)
 # ==========================================
 
 def calculate_fees_recursive(subtotal, fee_rates=[0.05, 0.02, 0.01]):
