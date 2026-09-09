@@ -179,35 +179,7 @@ def get_popularity_report(movies_db):
 # ==========================================
 
 def main():
-    print("=== Downtown Cinema Management System ===")
-    # Interactive menu loop goes here
-    
-    # add movie and showtime
-    for i in range(3):
-        new_showtime =add_showtime(
-            input("Enter the start time: "),
-            float(input("Enter the ticket price: ")),
-            int(input("Enter the number of seats: ")))
-        if new_showtime is not None:
-            added_movie = add_movie(
-                MOVIES_DB,
-                input("Enter the movie title: "),
-                input("Enter genres separated by commas: ").split(","),
-                [new_showtime])
-    
-
-            print(added_movie)
-    print(MOVIES_DB)
-
-    # search genre
-    genre_name = input("Enter the genre you want to search for: ")
-    result = search_by_genre(MOVIES_DB, genre_name)
-    print(result)
-
-    # search max price
-    max_price = input("Enter the max price you want to search for: ")
-    result_price = search_by_max_price(MOVIES_DB, max_price)
-    print(result_price)
+   
 
 if __name__ == "__main__":
     main()
