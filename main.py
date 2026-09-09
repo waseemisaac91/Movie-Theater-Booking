@@ -36,13 +36,44 @@ def add_movie(movies_db, title, genres, showtimes):
     - genres: should be converted to/stored as a set() to prevent duplicate genres.
     - showtimes: list of dicts, e.g., [{"time": "19:30", "price": 10.0, "seats": 50, "sold": 0}]
     """
-    pass
+    formatted_showtimes = []
+    
+    for showtime_data in showtimes:
+        new_showtime = add_showtime(
+            showtime_data["time"],
+            showtime_data["price"],
+            showtime_data["seats"]
+        )
+
+        if new_showtime is not None:
+            formatted_showtimes.append(new_showtime)
+
+    movie_information = {
+        "title": title,
+        "genres": set(genres),
+        "showtimes": formatted_showtimes
+    }
+
+    MOVIES_DB[title] = movie_information
+
+    return movie_information
 
 def add_showtime(start_time, ticket_price, auditorium_capacity):
     """
     Feature 1 Helper: Creates and returns a single showtime dictionary/tuple.
     """
-    pass
+    if ticket_price <= 0:
+        return None
+
+    if auditorium_capacity <= 0 or auditorium_capacity > 100:
+        return None
+
+    showtime= {
+        "time": start_time,
+        "price": ticket_price,
+        "seats": auditorium_capacity
+    }
+    return showtime
 
 def search_by_genre(movies_db, genre_name):
     """
@@ -50,14 +81,21 @@ def search_by_genre(movies_db, genre_name):
     - Must use filter() or lambda.
     - Must gracefully return an empty list/message if genre doesn't exist.
     """
-    pass
+    genre_name= genre_name.lower()
+    result= list(filter(lambda movie: genre_name in movie["genres"], 
+                        MOVIES_DB.values()))
+    return result
 
 def search_by_max_price(movies_db, max_price):
     """
     Feature 2: Returns showtimes/movies priced at or below max_price.
     - Must use filter() and lambda.
     """
-    pass
+    max_price= float(max_price)
+    result_price= list(filter(lambda movie: any(showtime["price"] <= max_price
+                                                for showtime in movie["showtimes"]),
+                                                MOVIES_DB.values()))
+    return result_price
 
 
 # ==========================================
@@ -538,6 +576,5 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()
 
