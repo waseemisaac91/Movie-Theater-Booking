@@ -91,15 +91,6 @@ def add_snack_to_order(order, snack_menu, snack_name, quantity):
 # ==========================================
 
 def calculate_fees_recursive(subtotal, fee_rates=(0.05, 0.02, 0.01)):
-
-    """
-
-    
-
-    """
-
-    # Base case: no more fees left to apply
-
     if len(fee_rates) == 0:
 
         return subtotal
