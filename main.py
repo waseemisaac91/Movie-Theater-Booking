@@ -467,7 +467,9 @@ def get_popularity_report(movies_db, top_n=5):
 # ==========================================
 
 def main():
+
     print("=== Downtown Cinema Management System ===")
+
     # Interactive menu loop goes here
     
     # add movie and showtime
@@ -482,8 +484,6 @@ def main():
                 input("Enter the movie title: "),
                 input("Enter genres separated by commas: ").split(","),
                 [new_showtime])
-    
-
             print(added_movie)
     print(MOVIES_DB)
 
