@@ -128,50 +128,376 @@ def add_snack_to_order(order, snack_menu, snack_name, quantity):
 # Waseem: FEATURES 5, 6, 7 (Checkout & Reports)
 # ==========================================
 
-def calculate_fees_recursive(subtotal, fee_rates=[0.05, 0.02, 0.01]):
-    """
-    Feature 5 (Course Requirement): RECURSIVE function to calculate fee total.
-    - Step 1: Apply 5% service fee on subtotal.
-    - Step 2: Apply 2% booking fee on new amount.
-    - Step 3: Apply 1% city tax on new amount.
-    Base case: fee_rates list is empty.
-    """
-    pass
+def calculate_fees_recursive(subtotal, fee_rates=(0.05, 0.02, 0.01)):
+    if len(fee_rates) == 0:
 
-def calculate_order_subtotal(order):
+        return subtotal
+
+
+    # Apply the first fee in the list to the current running total
+
+    current_rate = fee_rates[0]
+
+    new_amount = subtotal + (subtotal * current_rate)
+
+    # Recursive case: apply the remaining fees to the new amount
+
+    return calculate_fees_recursive(new_amount, fee_rates[1:])
+6
+
+def calculate_order_subtotal(order, movies_db, snack_menu):
+
     """
-    Feature 5 Helper: Calculates subtotal using map() / reduce() or lambda.
+
+    Feature 5 Helper: Calculates subtotal using map() / reduce().
+
     - Sum of (ticket_quantity * ticket_price) + sum of snack items.
+
+
+
+    Expected `order` shape:
+
+        {
+
+            "customer": str,
+
+            "movie": str or None,
+
+            "showtime_index": int or None,
+
+            "ticket_quantity": int,
+
+            "snacks": [{"name": str, "quantity": int}, ...]
+
+        }
+
     """
-    pass
+
+    ticket_cost = 0.0
+
+    movie_title = order.get("movie")
+
+    showtime_index = order.get("showtime_index")
+
+
+
+    if movie_title and showtime_index is not None:
+
+        movie = movies_db.get(movie_title)
+
+        if movie:
+
+            showtimes = movie.get("showtimes", [])
+
+            if 0 <= showtime_index < len(showtimes):
+
+                showtime = showtimes[showtime_index]
+
+                ticket_cost = showtime["price"] * order.get("ticket_quantity", 0)
+
+
+
+    snacks = order.get("snacks", [])
+
+    # map(): turn each snack line into its line-total cost
+
+    snack_costs = list(
+
+        map(lambda item: snack_menu.get(item["name"], 0) * item["quantity"], snacks)
+
+    )
+
+    # reduce(): sum all the snack line-totals into one number
+
+    snack_total = reduce(lambda acc, cost: acc + cost, snack_costs, 0.0)
+
+    return ticket_cost + snack_total
+
 
 def print_receipt(customer_name, movie_info, tickets_info, snacks_list, subtotal, final_total):
-    """
-    Feature 5: Displays neatly formatted itemized receipt aligned in columns.
-    """
-    pass
 
-def checkout(order, movies_db, customers_db):
     """
+
+    Feature 5: Displays a neatly formatted, column-aligned itemized receipt.
+
+
+
+    - movie_info: {"title": str, "time": str}
+
+    - tickets_info: {"quantity": int, "price": float}
+
+    - snacks_list: [{"name": str, "quantity": int, "line_total": float}, ...]
+
+    """
+
+    WIDTH = 30
+
+    LABEL_WIDTH = 22
+
+
+
+    print("=" * 10 + " RECEIPT " + "=" * 10)
+
+    print(f"Customer: {customer_name}")
+
+
+
+    if movie_info:
+
+        print(f"Movie:    {movie_info['title']} ({movie_info['time']})")
+
+
+
+    print("-" * WIDTH)
+
+
+
+    if tickets_info and tickets_info.get("quantity", 0) > 0:
+
+        qty = tickets_info["quantity"]
+
+        price = tickets_info["price"]
+
+        label = f"Tickets ({qty} x ${price:.2f})"
+
+        amount = f"${qty * price:.2f}"
+
+        print(f"{label:<{LABEL_WIDTH}}{amount:>8}")
+
+
+
+    for snack in snacks_list:
+
+        label = f"{snack['name']} x{snack['quantity']}"
+
+        amount = f"${snack['line_total']:.2f}"
+
+        print(f"{label:<{LABEL_WIDTH}}{amount:>8}")
+
+
+
+    print("-" * WIDTH)
+
+    print(f"{'Subtotal:':<{LABEL_WIDTH}}{'$' + format(subtotal, '.2f'):>8}")
+
+    print(f"{'Total with fees:':<{LABEL_WIDTH}}{'$' + format(final_total, '.2f'):>8}")
+
+    print("=" * WIDTH)
+
+
+
+def checkout(order, movies_db, customers_db, snack_menu):
+
+    """
+
     Feature 5: Completes order payment, prints receipt, updates seat count,
+
     updates total movie sales, and saves order to customer history.
-    - MUST NOT crash if no movie is selected in the order yet.
+
+
     """
-    pass
+
+    customer_name = order.get("customer")
+
+    movie_title = order.get("movie")
+
+    showtime_index = order.get("showtime_index")
+
+    # Guard: no movie selected yet
+
+    if not movie_title or showtime_index is None:
+
+        print("⚠️  Cannot check out: no movie/showtime has been selected for this order yet.")
+
+        return None
+
+
+
+    movie = movies_db.get(movie_title)
+
+    if movie is None:
+
+        print(f"⚠️  Cannot check out: movie '{movie_title}' was not found in the system.")
+
+        return None
+
+
+
+    showtimes = movie.get("showtimes", [])
+
+    if not (0 <= showtime_index < len(showtimes)):
+
+        print(f"⚠️  Cannot check out: showtime for '{movie_title}' is invalid.")
+
+        return None
+
+
+
+    showtime = showtimes[showtime_index]
+
+    ticket_qty = order.get("ticket_quantity", 0)
+
+
+
+    # Build the priced snack list for the receipt
+
+    snacks_list = [
+
+        {
+
+            "name": item["name"],
+
+            "quantity": item["quantity"],
+
+            "line_total": snack_menu.get(item["name"], 0) * item["quantity"],
+
+        }
+
+        for item in order.get("snacks", [])
+
+    ]
+
+
+
+    subtotal = calculate_order_subtotal(order, movies_db, snack_menu)
+
+    final_total = calculate_fees_recursive(subtotal)
+
+
+
+    movie_info = {"title": movie_title, "time": showtime["time"]}
+
+    tickets_info = {"quantity": ticket_qty, "price": showtime["price"]}
+
+
+
+    print_receipt(customer_name, movie_info, tickets_info, snacks_list, subtotal, final_total)
+
+
+
+    # Update seat count and popularity counter for this showing
+
+    showtime["seats"] = max(0, showtime["seats"] - ticket_qty)
+
+    showtime["sold"] = showtime.get("sold", 0) + ticket_qty
+
+
+
+    # Record this order in the customer's history
+
+    order_record = {
+
+        "movie": movie_title,
+
+        "time": showtime["time"],
+
+        "ticket_quantity": ticket_qty,
+
+        "snacks": snacks_list,
+
+        "subtotal": subtotal,
+
+        "total": final_total,
+
+    }
+
+    customers_db.setdefault(customer_name, []).append(order_record)
+
+
+
+    return order_record
+
 
 def get_customer_history(customers_db, customer_name):
-    """
-    Feature 6: Pulls up customer history.
-    - MUST NOT crash if customer does not exist in system.
-    """
-    pass
 
-def get_popularity_report(movies_db):
     """
-    Feature 7: Generates top-selling movies report ranked by tickets sold.
-    - Use map(), reduce(), or lambda sorting.
+
+    Feature 6: Pulls up a customer's order history.
+
+    - MUST NOT crash if the customer does not exist in the system.
+
     """
-    pass
+
+    history = customers_db.get(customer_name)
+
+
+
+    if not history:
+
+        print(f"No order history found for customer '{customer_name}'.")
+
+        return []
+
+
+
+    print(f"=== Order History for {customer_name} ===")
+
+    for i, past_order in enumerate(history, start=1):
+
+        print(
+
+            f"{i}. {past_order['movie']} ({past_order['time']}) - "
+
+            f"{past_order['ticket_quantity']} ticket(s) - "
+
+            f"Total: ${past_order['total']:.2f}"
+
+        )
+
+    return history
+
+
+def get_popularity_report(movies_db, top_n=5):
+
+    """
+
+    Feature 7: Generates a top-selling movies report ranked by tickets sold.
+
+    """
+
+    def total_sold_for_movie(showtimes):
+
+        return reduce(lambda acc, st: acc + st.get("sold", 0), showtimes, 0)
+
+    # map(): (title, total_tickets_sold) for every movie
+
+    sales = list(
+
+        map(
+
+            lambda entry: (entry[0], total_sold_for_movie(entry[1].get("showtimes", []))),
+
+            movies_db.items(),
+
+        )
+
+    )
+
+
+    # filter(): only keep movies that have actually sold at least one ticket
+
+    sold_movies = list(filter(lambda pair: pair[1] > 0, sales))
+
+    # sort by tickets sold, highest first
+
+    ranked = sorted(sold_movies, key=lambda pair: pair[1], reverse=True)
+
+    top_movies = ranked[:top_n]
+
+    if not top_movies:
+
+        print("No ticket sales have been recorded yet.")
+
+        return []
+
+    print("=== Top-Selling Movies ===")
+
+    for rank, (title, sold) in enumerate(top_movies, start=1):
+
+        print(f"{rank}. {title} - {sold} ticket(s) sold")
+
+
+    return top_movies
 
 
 # ==========================================
@@ -179,7 +505,76 @@ def get_popularity_report(movies_db):
 # ==========================================
 
 def main():
-   
+
+    print("=== Downtown Cinema Management System ===")
+
+    # Interactive menu loop goes here
+    
+    # add movie and showtime
+    for i in range(3):
+        new_showtime =add_showtime(
+            input("Enter the start time: "),
+            float(input("Enter the ticket price: ")),
+            int(input("Enter the number of seats: ")))
+        if new_showtime is not None:
+            added_movie = add_movie(
+                MOVIES_DB,
+                input("Enter the movie title: "),
+                input("Enter genres separated by commas: ").split(","),
+                [new_showtime])
+            print(added_movie)
+    print(MOVIES_DB)
+
+    # search genre
+    genre_name = input("Enter the genre you want to search for: ")
+    result = search_by_genre(MOVIES_DB, genre_name)
+    print(result)
+
+    # search max price
+    max_price = input("Enter the max price you want to search for: ")
+    result_price = search_by_max_price(MOVIES_DB, max_price)
+    print(result_price)
+
+    # ---------------------------------------------------
+
+    # Features 3 & 4 (Dana): booking + snacks
+
+    # ---------------------------------------------------
+    
+    customer_name = input("Enter the customer name for this order: ")
+
+    active_order = create_active_order(customer_name)
+
+    movie_title = input("Enter the movie title to book: ")
+
+    showtime_index = int(input("Enter the showtime index (0, 1, 2...): "))
+
+    quantity = int(input("Enter number of tickets: "))
+
+    book_tickets(active_order, movie_title, showtime_index, quantity, MOVIES_DB)
+
+    snack_name = input("Enter a snack name to add (leave blank to skip): ")
+
+    if snack_name:
+
+        snack_qty = int(input("Enter snack quantity: "))
+
+        add_snack_to_order(active_order, SNACK_MENU, snack_name, snack_qty)
+
+
+    # ---------------------------------------------------
+
+    # Features 5, 6 & 7 (Waseem): checkout + reports
+
+    # ---------------------------------------------------
+
+    checkout(active_order, MOVIES_DB, CUSTOMERS_DB, SNACK_MENU)
+
+    get_customer_history(CUSTOMERS_DB, customer_name)
+
+    get_popularity_report(MOVIES_DB)
+
 
 if __name__ == "__main__":
     main()
+
