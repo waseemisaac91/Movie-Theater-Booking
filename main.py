@@ -105,24 +105,82 @@ def search_by_max_price(movies_db, max_price):
 def create_active_order(customer_name):
     """
     Initializes a new empty order dictionary for a customer.
+    tickets: list of dicts, e.g. [{"movie": ..., "showtime": ..., "quantity": ...}]
+    snacks: list of tuples (name, quantity, unit_price)
     """
-    pass
+    return {
+        "customer": customer_name,
+        "tickets": [],
+        "snacks": []
+    }
+
 
 def book_tickets(order, movie_title, showtime_index, quantity, movies_db):
     """
     Feature 3: Books tickets for a selected movie and showtime.
     - MUST NOT crash if requested seats > available seats.
-    - Must decrease available seats or mark them for checkout update.
+    - Decreases available seats (via 'sold') when the booking succeeds.
+    Returns True on success, False on failure (never raises an exception).
     """
-    pass
+    # 1. Movie must exist
+    if movie_title not in movies_db:
+        print(f"\nError: Movie '{movie_title}' does not exist in the system.\n")
+        return False
+
+    showtimes = movies_db[movie_title]["showtimes"]
+
+    # 2. Showtime index must be valid
+    if not (0 <= showtime_index < len(showtimes)):
+        print("\nError: That showtime does not exist for this movie.\n")
+        return False
+
+    showtime = showtimes[showtime_index]
+    seats_available = showtime["seats"] - showtime["sold"]
+
+    # 3. Quantity must be sane
+    if quantity <= 0:
+        print("\nError: Number of tickets must be at least 1.\n")
+        return False
+
+    # 4. Enough seats left? (the core requirement)
+    if quantity > seats_available:
+        print(f"\nError: Only {seats_available} seat(s) left for "
+              f"'{movie_title}' at {showtime['time']}.\n")
+        return False
+
+    # 5. All checks passed -> commit the booking
+    showtime["sold"] += quantity
+    order["tickets"].append({
+        "movie": movie_title,
+        "showtime": showtime,
+        "quantity": quantity
+    })
+
+    print(f"\nBooked {quantity} ticket(s) for '{movie_title}' at {showtime['time']}.\n")
+    return True
+
 
 def add_snack_to_order(order, snack_menu, snack_name, quantity):
     """
     Feature 4: Adds snack bar items to the active customer order.
-    - Must handle invalid snack choices gracefully.
+    - Must handle invalid snack choices gracefully (no crash).
+    Returns True on success, False on failure.
     """
-    pass
+    # 1. Snack must exist on the menu
+    if snack_name not in snack_menu:
+        print(f"\nError: '{snack_name}' is not on the snack menu.\n")
+        return False
 
+    # 2. Quantity must be sane
+    if quantity <= 0:
+        print("\nError: Quantity must be at least 1.\n")
+        return False
+
+    # 3. Add to order
+    price = snack_menu[snack_name]
+    order["snacks"].append((snack_name, quantity, price))
+    print(f"\nAdded {quantity} x {snack_name} to the order.\n")
+    return True
 
 # ==========================================
 # Waseem: FEATURES 5, 6, 7 (Checkout & Reports)
