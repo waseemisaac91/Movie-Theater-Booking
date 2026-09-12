@@ -221,51 +221,26 @@ def calculate_order_subtotal(order, movies_db, snack_menu):
 
 def print_receipt(customer_name, tickets_info, snacks_list, subtotal, final_total):
 
-    
-
     WIDTH = 30
-
     LABEL_WIDTH = 22
 
-
-
     print("=" * 10 + " RECEIPT " + "=" * 10)
-
     print(f"Customer: {customer_name}")
-
-
     print("-" * WIDTH)
 
-    if tickets_info and tickets_info.get("quantity", 0) > 0:
+    for t in tickets_info:
+        label = f"{t['movie']} ({t['showtime']['time']}) x{t['quantity']}"
+        amount = f"${t['quantity'] * t['showtime']['price']:.2f}"
+        print(f"{label:<{LABEL_WIDTH}}{amount:>8}")
 
-        qty = tickets_info["quantity"]
-
-        price = tickets_info["price"]
-
-        label = f"Tickets ({qty} x ${price:.2f})"
-
+    for name, qty, price in snacks_list:
+        label = f"{name} x{qty}"
         amount = f"${qty * price:.2f}"
-
         print(f"{label:<{LABEL_WIDTH}}{amount:>8}")
-
-
-
-    for snack in snacks_list:
-
-        label = f"{snack['name']} x{snack['quantity']}"
-
-        amount = f"${snack['line_total']:.2f}"
-
-        print(f"{label:<{LABEL_WIDTH}}{amount:>8}")
-
-
 
     print("-" * WIDTH)
-
     print(f"{'Subtotal:':<{LABEL_WIDTH}}{'$' + format(subtotal, '.2f'):>8}")
-
     print(f"{'Total with fees:':<{LABEL_WIDTH}}{'$' + format(final_total, '.2f'):>8}")
-
     print("=" * WIDTH)
 
 
